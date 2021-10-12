@@ -13,6 +13,12 @@ geoTiffToSGRD_custom <- function(file_name, write_name){
 }
 
 
+# RSAGA SETTINGS ###############################################################
+
+library(RSAGA)
+
+myenv <- rsaga.env()
+
 
 
 
