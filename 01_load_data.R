@@ -7,13 +7,14 @@ library(RSAGA)
 
 myenv <- rsaga.env()
 
-# load lithogy and landuse data ################################################
+
+##load lithogy and landuse data ################################################
 library(rgdal)
 
-#name of landuse shapefile
+# name of landuse shapefile
 nm_landusepoly <- "landuse_uso_suelo"
 
-#name of lithology shapefile
+# name of lithology shapefile
 nm_lithopoly <- "lithology_cetaquaprj"
 
 # load landuse polygon
