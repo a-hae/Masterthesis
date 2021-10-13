@@ -1,4 +1,8 @@
-# Load packages and data-------------------------------------------------------
+### runoptGPP
+### Optimizin an individual runout event 
+### by Jason Goetz
+
+## Load packages and data-------------------------------------------------------
 library(runoptGPP)
 library(raster)
 library(rgdal)
@@ -19,7 +23,6 @@ nm_runoutpoly <- "debris_flow_runout_polys"
 runout_polygons <- readOGR(".", nm_runoutpoly)
 
 # assign object ID based on row number
-
 runout_polygons$objectid <- 1:length(runout_polygons)
 
 # Select a debris flow and source point for this example
@@ -35,13 +38,14 @@ plot(source_point, add = TRUE)
 saga <- saga_gis(opt_lib = "sim_geomorphology")
 
 
-# GPP random walk to simluate runout path
+# GPP random walk: -------------------------------------------------------------
+# simluate runout path 
 rwPerformance(dem, slide_plys = runout_polygon, slide_src = source_point,
               slp = 30, ex = 3, per = 2,
               gpp_iter = 1000, buffer_ext = 500, buffer_source = 50,
               plot_eval = TRUE, saga_lib = saga)
 
-#GPP random walk: grid search optimization -------------------------------------
+# grid search optimization 
 
 steps <- 3
 # Exponent controlling lateral spread
@@ -68,7 +72,8 @@ rw_opt_single <- rwGetOpt_single(rw_gridsearch)
 rw_opt_single
 
 
-# GGP PCM: model simulation: runout distance------------------------------------
+# GGP PCM: ---------------------------------------------------------------------
+# model simulation: runout distance
 
 pcm <- pcmPerformance(dem, slide_plys = runout_polygon, slide_src = source_point,
                       rw_slp = 40, rw_ex = 2.15, rw_per = 1.5,
@@ -85,7 +90,7 @@ names(gpp_output) <- c("Process_area", "Stop_positions", "Max_velocity")
 plot(gpp_output)
 
 
-#GPP PCM: grid search optimization -------------------------------------
+# grid search optimization 
 
 # The mass-to-drag ratio (m)
 pcmmd_vec <- seq(20, 120, by=20)
