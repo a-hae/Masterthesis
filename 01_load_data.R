@@ -4,6 +4,7 @@ setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/upper_maipo_river")
 
 library(RSAGA)
 library(rgdal)
+library(spdplyr)
 
 # RSAGA SETTINGS ---------------------------------------------------------------
 
@@ -27,8 +28,6 @@ litho_poly <- readOGR(".", nm_lithopoly)
 # name of debris flow source point shapefile
 nm_src_pts <- "debris_flow_source_points"
 
-# load source points shpaefile
-src_pts <- readOGR(".", nm_src_pts)
 
 ## landslides in group (landuse and lithology)----------------------------------
 
@@ -38,6 +37,23 @@ rsaga.geoprocessor(lib="shapes_points", module = 10, env = env, show.output.on.c
 
 rsaga.geoprocessor(lib="shapes_points", module = 10, env = env, show.output.on.console = TRUE, param = list(
   INPUT = "debris_flow_source_points_poly_attr.shp", OUTPUT = "debris_flow_source_points_poly_attr", POLYGONS = "landuse_uso_suelo.shp", FIELDS = "Sub_uso"))
+
+# 
+
+# name of  new debris flow source point shapefile
+nm_src_pts_attr <- "debris_flow_source_points_poly_attr"
+
+# load source points shpaefile
+src_pts_attr <- readOGR(".", nm_src_pts_attr)
+
+# convert it in normal dataframe
+src_pts_attr_df <- as.data.frame(src_pts_attr)
+
+# Count landslide in each group
+src_pts_attr_df %>% group_by(Nombre) %>% count()
+
+src_pts_attr_df %>% group_by(Sub_uso) %>% count()
+
 
 
 
