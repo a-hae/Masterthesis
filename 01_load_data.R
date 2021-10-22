@@ -4,7 +4,7 @@ setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/upper_maipo_river")
 
 library(RSAGA)
 library(rgdal)
-library(spdplyr)
+library(dplyr)
 
 # RSAGA SETTINGS ---------------------------------------------------------------
 
@@ -51,12 +51,24 @@ src_pts_attr_df <- as.data.frame(src_pts_attr)
 
 # Count landslide in each group
 litho_groups <- src_pts_attr_df %>% group_by(Nombre) %>% count()
-litho_group_tbl <- data.frame(litho_groups)
 
 landuse_groups <- src_pts_attr_df %>% group_by(Sub_uso) %>% count()
 
+# create new dataframes for each group
+for (k in litho_groups[[1]]) {
+  assign(paste0("group_", k),src_pts_attr_df %>% filter( Nombre == k) )
+  
+  }
+
+for (l in landuse_groups[[1]]) {
+  assign(paste0("group_", l),src_pts_attr_df %>% filter( Sub_uso == l) )
+  
+}
 
 
+## random sample in each group--------------------------------------------------
+
+# at least 10 if available
 
 
 
