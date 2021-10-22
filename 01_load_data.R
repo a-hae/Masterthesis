@@ -10,7 +10,7 @@ library(dplyr)
 
 env <- rsaga.env()
 
-
+set.seed(10)
 ##load data --------------------------------------------------------------------
 
 # name of landuse shapefile
@@ -56,19 +56,29 @@ landuse_groups <- src_pts_attr_df %>% group_by(Sub_uso) %>% count()
 
 # create new dataframes for each group
 for (k in litho_groups[[1]]) {
-  assign(paste0("group_", k),src_pts_attr_df %>% filter( Nombre == k) )
+  # lfilter landslides
+  group_filtered <- src_pts_attr_df %>% filter( Nombre == k)
+  # if filtered group larger than 10 landslide, select 10 randomply
+  if (count(group_filtered) >= 10) {
+    #select due random sample 10 landslides 
+    group_filtered <- group_filtered[sample(nrow(group_filtered), 10), ]
+  }
+  # create new variable name with group name
+  assign(paste0("group_", k),group_filtered )
   
   }
 
 for (l in landuse_groups[[1]]) {
-  assign(paste0("group_", l),src_pts_attr_df %>% filter( Sub_uso == l) )
+  # lfilter landslides
+  group_filtered <- src_pts_attr_df %>% filter( Sub_uso == l) 
+  # if filtered group larger than 10 landslide, select 10 randomply
+  if (count(group_filtered) > 10) {
+    #select due random sample 10 landslides 
+    group_filtered <- group_filtered[sample(nrow(group_filtered), 10), ]
+    }
+  # create new variable name with group name
+  assign(paste0("group_", l), group_filtered)
   
 }
-
-
-## random sample in each group--------------------------------------------------
-
-# at least 10 if available
-
 
 
