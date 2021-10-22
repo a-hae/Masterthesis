@@ -1,3 +1,16 @@
+# 01_load_data.R
+#-------------------------------------------------------------------------------
+# Tasks:
+# - create saga enciroment
+# - add polygon attributes of lithology and landuse to each point in 
+#   event source shapefile
+# - load new point sapefile 
+# - group eventpoints after lithology groups and landuse groups
+# - create randoms sample of points fpr each group
+
+###-----------------------------------------------------------------------------
+
+
 setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/upper_maipo_river")
 
 ## load packages ---------------------------------------------------------------
@@ -11,25 +24,9 @@ library(dplyr)
 env <- rsaga.env()
 
 set.seed(10)
-##load data --------------------------------------------------------------------
 
-# name of landuse shapefile
-nm_landusepoly <- "landuse_uso_suelo"
-
-# name of lithology shapefile
-nm_lithopoly <- "lithology_cetaquaprj"
-
-# load landuse polygon
-landuse_poly <- readOGR(".", nm_landusepoly)
-
-# load lithology polygon
-litho_poly <- readOGR(".", nm_lithopoly)
-
-# name of debris flow source point shapefile
-nm_src_pts <- "debris_flow_source_points"
-
-
-## landslides in groups (landuse and lithology)----------------------------------
+## landslides in groups (landuse and lithology)---------------------------------
+## and create random sample of each group --------------------------------------
 
 # add polygon attributes from landuse and lithology to each point
 rsaga.geoprocessor(lib="shapes_points", module = 10, env = env, show.output.on.console = TRUE, param = list(
@@ -38,7 +35,6 @@ rsaga.geoprocessor(lib="shapes_points", module = 10, env = env, show.output.on.c
 rsaga.geoprocessor(lib="shapes_points", module = 10, env = env, show.output.on.console = TRUE, param = list(
   INPUT = "debris_flow_source_points_poly_attr.shp", OUTPUT = "debris_flow_source_points_poly_attr", POLYGONS = "landuse_uso_suelo.shp", FIELDS = "Sub_uso"))
 
-# 
 
 # name of  new debris flow source point shapefile
 nm_src_pts_attr <- "debris_flow_source_points_poly_attr"
