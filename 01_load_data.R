@@ -1,7 +1,7 @@
-# 01_load_data.R
+# 01_slides_group.R
 #-------------------------------------------------------------------------------
 # Tasks:
-# - create saga enciroment
+# - create saga enviroment
 # - add polygon attributes of lithology and landuse to each point in 
 #   event source shapefile
 # - load new point sapefile 
@@ -9,7 +9,6 @@
 # - create randoms sample of points fpr each group
 
 ###-----------------------------------------------------------------------------
-
 
 setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/upper_maipo_river")
 
@@ -54,7 +53,7 @@ landuse_groups <- src_pts_attr_df %>% group_by(Sub_uso) %>% count()
 for (k in litho_groups[[1]]) {
   # lfilter landslides
   group_filtered <- src_pts_attr_df %>% filter( Nombre == k)
-  # if filtered group larger than 10 landslide, select 10 randomply
+  # if filtered group larger than 10 landslide, select 10 randomly
   if (count(group_filtered) >= 10) {
     #select due random sample 10 landslides 
     group_filtered <- group_filtered[sample(nrow(group_filtered), 10), ]
@@ -67,7 +66,7 @@ for (k in litho_groups[[1]]) {
 for (l in landuse_groups[[1]]) {
   # lfilter landslides
   group_filtered <- src_pts_attr_df %>% filter( Sub_uso == l) 
-  # if filtered group larger than 10 landslide, select 10 randomply
+  # if filtered group larger than 10 landslide, select 10 randomly
   if (count(group_filtered) > 10) {
     #select due random sample 10 landslides 
     group_filtered <- group_filtered[sample(nrow(group_filtered), 10), ]
@@ -77,4 +76,22 @@ for (l in landuse_groups[[1]]) {
   
 }
 
+for (k in landuse_groups[[1]]) {
+  
+  for (l in 1:length(src_pts_attr)) {
+    if ( k == src_pts_attr$Sub_uso[[l]]) {
+      print(src_pts_attr$OBJECTID_1[[l]])
+      
+      new_sp_df <- src_pts_attr[src_pts_attr$OBJECTID_1 == 10]
+                                
+    }
+  }
+  
+}
 
+coordinates(`group_Formaci_n Abanico`) <- `group_Formaci_n Abanico`[20:21]
+
+
+# export shapefiles 
+nm_output <- "source_points_group_Native"
+writeOGR(`group_Formaci_n Abanico`, dsn = "grouped_source_points_", nm_output, driver="ESRI Shapefile")
