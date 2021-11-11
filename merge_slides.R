@@ -32,9 +32,9 @@ FindConnected <- function(slidesSHP) {
     for  (k in 1:length(slidesSHP)){
       if (slidesSHP[s,]$Id != slidesSHP[k,]$Id)  {
         # check for same boundary of two features
-        #touch <- gTouches(slidesSHP[s,], slidesSHP[k,])
-        overlaps <- gOverlaps(slidesSHP[s,], slidesSHP[k,])
-        if (overlaps == TRUE) {
+        touch <- gTouches(slidesSHP[s,], slidesSHP[k,])
+        #overlaps <- gOverlaps(slidesSHP[s,], slidesSHP[k,])
+        if (touch == TRUE) {
           # give pair of features one value
           # if number already their, take it
           if (slidesSHP[s,]$aggregate == 0 && slidesSHP[k,]$aggregate == 0){
@@ -65,6 +65,24 @@ FindConnected <- function(slidesSHP) {
 }
   
 
+### aggregate connected features -----------------------------------------------
+
+#load data
+slides <- readOGR(".","DF_Stolla_all_new")
+# identify and define connected slides
+slides_con <- FindConnected(slides)
+
+# merge all slides with same number
+slides_merged <- aggregate(slides_con, by = "aggregate")
+
+# create new ID column
+slides_merged$Id <- 0
+# define index of id column
+id_idx <- which(colnames(slides_merged@data)=="Id")
+
+for (n in 1:length(slides_merged)) {
+  slides_merged[n,id_idx] = n
+}
 
 
  
