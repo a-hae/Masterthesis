@@ -18,6 +18,7 @@ library(raster)
 
 env <- rsaga.env()
 
+# Functions --------------------------------------------------------------------
 FindConnected <- function(slidesSHP) {
   # add new attribute: aggregate
   slidesSHP$aggregate = 0
@@ -53,6 +54,17 @@ FindConnected <- function(slidesSHP) {
       
     }
   }
+  # change all zero in aggeggrate column in new unique values
+  for (m in 1:length(slidesSHP)) {
+    if (slidesSHP[m,]$aggregate == 0) {
+      slidesSHP[m,agg_idx] = list[z]
+      z = z+1
+    }
+  }
+  return(slidesSHP)
 }
   
+
+
+
  
