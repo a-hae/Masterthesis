@@ -98,6 +98,10 @@ while (length(slides1) > length(slides_merged1)) {
   slides_merged <- FindConnected(slides1)
 }
 
+# optimize connection of features with gOverlaps function
 slides_merged_fin <- FindConnected(slides_merged, "overlaps")
+
+# export merged slides file
+writeOGR(`slides_merged_fin`, dsn = "merged_slides", "merged_slides", driver="ESRI Shapefile", overwrite_layer =  TRUE)
 
  
