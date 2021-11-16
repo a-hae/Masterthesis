@@ -19,7 +19,7 @@ library(raster)
 env <- rsaga.env()
 
 # Functions --------------------------------------------------------------------
-FindConnected <- function(slidesSHP) {
+FindConnected <- function(slidesSHP, func = "touch") {
   # add new attribute: aggregate
   slidesSHP$aggregate = 0
   # define index of aggregate column
@@ -32,8 +32,13 @@ FindConnected <- function(slidesSHP) {
     for  (k in 1:length(slidesSHP)){
       if (slidesSHP[s,]$Id != slidesSHP[k,]$Id)  {
         # check for same boundary of two features
-        touch <- gTouches(slidesSHP[s,], slidesSHP[k,])
-        #overlaps <- gOverlaps(slidesSHP[s,], slidesSHP[k,])
+        if (func == "touch") {
+          touch <- gTouches(slidesSHP[s,], slidesSHP[k,])
+        }
+        else if (func == "overlaps") {
+          touch <- gOverlaps(slidesSHP[s,], slidesSHP[k,])
+        }
+        
         if (touch == TRUE) {
           # give pair of features one value
           # if number already their, take it
@@ -93,5 +98,6 @@ while (length(slides1) > length(slides_merged1)) {
   slides_merged <- FindConnected(slides1)
 }
 
+slides_merged_fin <- FindConnected(slides_merged, "overlaps")
 
  
