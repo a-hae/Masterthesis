@@ -84,5 +84,14 @@ for (n in 1:length(slides_merged)) {
   slides_merged[n,id_idx] = n
 }
 
+# repeat merging until nothing change
+slides1 <- slides
+slides_merged1 <- slides_merged
+
+while (length(slides1) > length(slides_merged1)) {
+  slides1 = slides_merged
+  slides_merged <- FindConnected(slides1)
+}
+
 
  
