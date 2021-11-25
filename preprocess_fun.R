@@ -73,3 +73,41 @@ classConnPly <- function(runout_ply, river_ply) {
   return(runout_ply)
   
 }
+
+
+autoSelCells <- function(dem = crop_dtm, runout_ply = slide, prop= 0.05, upper = TRUE){
+  # This function creates a grid of the upper or lower percentage of cells
+  # in a polygon (e.g. runout track) based on elevation.
+  
+  # dem: a digital elevation model as a raster object
+  # runout_ply: a runout track polygon (SpatialPolygonsDataFrame)
+  # prop: is percentage of cells (in proportions e.g 0.05 = 5%)
+  # upper: if TRUE the upper elevation cells (source) are determined, 
+  #        if FALSE the lower elevation cells (deposition) are determined
+  #        
+  
+  
+  slide_elev <- raster::extract(dem, runout_ply, cellnumbers = TRUE, df = TRUE)
+  names(slide_elev) <- c("ID", "cell", "elev")
+  
+  num_cells <- nrow(slide_elev)
+  cells_per <- prop* num_cells
+  
+  if(cells_per < 1){
+    cells_per = 1
+  }
+  
+  if(upper == TRUE){
+    release_ids <- as.numeric(rownames(slide_elev[order(slide_elev$elev, decreasing = TRUE),])[1:cells_per])
+  } else {
+    release_ids <- as.numeric(rownames(slide_elev[order(slide_elev$elev, decreasing = FALSE),])[1:cells_per])
+  }
+  
+  release_cells <- slide_elev$cell[release_ids]
+  release_grid <- setValues(dem, NA)
+  
+  release_grid[release_cells] <- 1
+  
+  return(release_grid)
+  
+}
