@@ -28,3 +28,24 @@ classifyTreeline <- function(dem, runout_ply, treeline) {
   return(runout_ply)
   
 }
+
+
+combineConnPolys <- function(runout_ply) {
+  # This function combine all feature that are connected
+  
+  # dem: a digital elevation model as a raster object
+  
+  runout_ply_tree <- runout_ply[runout_ply@data$below_treeline == "Yes", "below_treeline"]
+  
+  runout_ply_combined <- rmapshaper::ms_dissolve(runout_ply_tree)
+  
+  runout_ply_split <- disaggregate(runout_ply_combined)
+  
+  runout_ply_splt$objectid <- 1:length(runout_ply_splt)
+  
+  # delete old column
+  runout_ply_split$rmapshaperid <- NULL
+  
+  return(runout_ply_split)
+  
+}
