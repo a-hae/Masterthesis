@@ -1,7 +1,4 @@
-## funtion----------------------------------------------------------------------
-
-# classify debris flow above and below height
-classTreeline <- function(dem, runout_ply, treeline, lowest = TRUE) {
+classifyTreeline <- function(dem, runout_ply, treeline) {
   # This function classfiy feature, which lay above or below based on 
   # a definded height 
   
@@ -28,52 +25,6 @@ classTreeline <- function(dem, runout_ply, treeline, lowest = TRUE) {
     
   }
   
-  return(runout_ply)
-  
-}
-
-
-
-combineConnPolys <- function(runout_ply) {
-  # This function combine all feature that are connected
-  
-  # dem: a digital elevation model as a raster object
-  
-  runout_ply_tree <- runout_ply[runout_ply@data$below_treeline == "Yes", "below_treeline"]
-  
-  runout_ply_combined <- rmapshaper::ms_dissolve(runout_ply_tree)
-  
-  runout_ply_split <- disaggregate(runout_ply_combined)
-  
-  runout_ply_splt$objectid <- 1:length(runout_ply_splt)
-  
-  # delete old column
-  runout_ply_split$rmapshaperid <- NULL
-  
-  return(runout_ply_split)
-  
-}
-
-
-classConnPly <- function(runout_ply, river_ply) {
-  # This function classfiy feature, if they are connected to river polygon or not
-  
-  # dem: a digital elevation model as a raster object
-  # runout_ply: runout polygons (SpatialPolygonsDataFrame)
-  
-  # add new attribute: aggregate
-  runout_ply$connected = "No"
-  # define index of connected column
-  con_idx <- which(colnames(runout_ply@data) =="connected")
-  
-  # add "yes" to all feature that are conected to river feature
-  for (s in 1:length(runout_ply)) {
-    overlap <- gOverlaps(runout_ply[s,], river_ply)
-    touch <- gTouches(runout_ply[s,], river_ply)
-    if (touch == TRUE || overlap == TRUE){
-      runout_ply[s,con_idx] <- "Yes"
-    }
-  }
   return(runout_ply)
   
 }
