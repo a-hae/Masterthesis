@@ -41,12 +41,17 @@ saga <- saga_gis(opt_lib = "sim_geomorphology")
 # GPP random walk: -------------------------------------------------------------
 # simluate runout path 
 rwPerformance(dem, slide_plys = runout_polygon, slide_src = source_point,
-              slp = 30, ex = 3, per = 2,
-              gpp_iter = 1000, buffer_ext = 500, buffer_source = 50,
+              slp = 30, ex = 3, per = 2, #slope, ...
+              gpp_iter = 1000, buffer_ext = 500, buffer_source = 50, #buffer: how wide to crop (change the area, have to play with it!! (velcity)
               plot_eval = TRUE, saga_lib = saga)
 
-# grid search optimization 
+# save time, time, explude plot
+# ggp_iter: if 1: for each cell path 
+# create biggger source area with buffer and then district in within the poylgon 
 
+# warning for includung outher parameteers
+
+# grid search optimization  
 steps <- 3
 # Exponent controlling lateral spread
 rwexp_vec <- seq(1.3, 3, len=steps)
@@ -54,6 +59,9 @@ rwexp_vec <- seq(1.3, 3, len=steps)
 rwper_vec <- seq(1.5, 2, len=steps)
 # Slope threshold - below lateral spreading is modeled.
 rwslp_vec <- seq(20, 40, len=steps)
+
+# do it with all values of grid search, use range of values 
+# you can fix value to try it out
 
 # compute perfomances values across grid seach space (AUROC)
 rw_gridsearch <- rwGridsearch(dem, slide_plys = runout_polygon, slide_src = source_point,
