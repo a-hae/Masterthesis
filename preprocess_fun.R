@@ -49,3 +49,27 @@ combineConnPolys <- function(runout_ply) {
   return(runout_ply_split)
   
 }
+
+
+classConnPly <- function(runout_ply, river_ply) {
+  # This function classfiy feature, if they are connected to river polygon or not
+  
+  # dem: a digital elevation model as a raster object
+  # runout_ply: runout polygons (SpatialPolygonsDataFrame)
+  
+  # add new attribute: aggregate
+  runout_ply$connected = "No"
+  # define index of connected column
+  con_idx <- which(colnames(runout_ply@data) =="connected")
+  
+  # add "yes" to all feature that are conected to river feature
+  for (s in 1:length(runout_ply)) {
+    overlap <- gOverlaps(runout_ply[s,], river_ply)
+    touch <- gTouches(runout_ply[s,], river_ply)
+    if (touch == TRUE || overlap == TRUE){
+      runout_ply[s,con_idx] <- "Yes"
+    }
+  }
+  return(runout_ply)
+  
+}
