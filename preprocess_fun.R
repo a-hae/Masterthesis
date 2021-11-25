@@ -1,4 +1,4 @@
-classifyTreeline <- function(dem, runout_ply, treeline) {
+classTreeline <- function(dem, runout_ply, treeline) {
   # This function classfiy feature, which lay above or below based on 
   # a definded height 
   
