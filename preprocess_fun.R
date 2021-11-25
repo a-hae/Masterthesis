@@ -16,9 +16,9 @@ classTreeline <- function(dem, runout_ply, treeline) {
   for (i in 1:length(runout_ply)){
     runout_ply_hgts <- extract(dem, runout_ply[i,], method = "simple", df = TRUE)
     # if one value in polygon under value: Yes
-    for (v in slide_hgts[,2]) {
+    for (v in runout_ply_hgts[,2]) {
       if (v <= 1500) {
-        slides[i,tree_idx] <- "Yes"
+        runout_ply[i,tree_idx] <- "Yes"
         break
       }
     }
