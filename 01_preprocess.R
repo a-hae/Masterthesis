@@ -2,6 +2,7 @@
 #-------------------------------------------------------------------------------
 # Tasks;
 # - classify above and below treeline
+# - create source celss for each polygon
 # - merge all features in shapefile which are connected
 # - classify: define if feature are connected to river or not (column: connected)
 
@@ -35,6 +36,9 @@ dbflows_tree <- dbflows_classtree[dbflows_classtree@data$below_treeline == "Yes"
 
 plot(dbflows_tree)
 
+writeOGR(`dbflows_tree`, dsn = "edit_files", "DF_Stolla_all_class_treeline", driver="ESRI Shapefile", overwrite_layer =  TRUE)
+
+
 ## create source cells for each runout polygon ---------------------------------
 
 # define proportion of upper cells to select
@@ -59,5 +63,25 @@ for(i in 2:length(dbflows_tree)){
 src_cells[src_cells == 0] <- NA
 
 plot(src_cells)
+
+#writeRaster(src_cells, filename = "src_cells_10per.tif", format = "GTiff", overwrite = TRUE)
+
+
+## merge all features in shapefile which are connected--------------------------
+library(MazamaSpatialUtils)
+
+dbflows_con <- combineConnPolys(dbflows_tree)
+
+
+
+##  check for connection to river-----------------------------------------------
+river <- readOGR(".","Stolla_channel")
+
+dbflows_class <- classConnPly(dbflows_con, river)
+
+#export shapefile
+writeOGR(`dbflows_class`, dsn = "edit_files", "DF_Stolla_merged_classified", driver="ESRI Shapefile", overwrite_layer =  TRUE)
+
+
 
 
