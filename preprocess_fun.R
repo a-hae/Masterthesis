@@ -33,13 +33,11 @@ combineConnPolys <- function(runout_ply) {
   
   # dem: a digital elevation model as a raster object
   
-  runout_ply_tree <- runout_ply[runout_ply@data$below_treeline == "Yes", "below_treeline"]
-  
-  runout_ply_combined <- rmapshaper::ms_dissolve(runout_ply_tree)
+  runout_ply_combined <- rmapshaper::ms_dissolve(runout_ply)
   
   runout_ply_split <- disaggregate(runout_ply_combined)
   
-  runout_ply_splt$objectid <- 1:length(runout_ply_splt)
+  runout_ply_split$objectid <- 1:length(runout_ply_split)
   
   # delete old column
   runout_ply_split$rmapshaperid <- NULL
