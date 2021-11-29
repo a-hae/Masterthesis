@@ -107,3 +107,35 @@ autoSelCells <- function(dem = crop_dtm, runout_ply = slide, prop= 0.05, upper =
   return(release_grid)
   
 }
+
+
+cellToPly <- function(src_raster, runout_polygons) {
+  # This function create polygons from rastercells, add associated runoutpolygon 
+  # Id and group by this Id number. 
+  
+  # src_cell: raster with source cells 
+  # runout Polygon: polygon shapefile with runout polygons. 
+  
+  
+  src_cell_poly <- raster::rasterToPolygons(src_raster, fun = NULL, n = 4, na.rm = TRUE, digits = 12, dissolve = FALSE)
+  
+  # add Runoutpolygon id to source cells
+  
+  src_cell_poly$runout_poly <- 0
+  run_idx <- which(colnames(src_cell_poly@data) =="runout_poly")
+  
+  for (i in 1:length(src_cell_poly)) {
+    for (k in 1:length(runout_polygons)) {
+      overlap <- gOverlaps(src_cell_poly[i,], runout_polygons[k,])
+      touch <- gWithin(src_cell_poly[i,], runout_polygons[k,])
+      if (overlap == TRUE  || touch == TRUE) {
+        src_cell_poly[i,run_idx] <- runout_polygons[k,]$Id 
+      }
+    }
+    
+  }
+  
+  src_cell_poly_group = aggregate(src_cell_poly, by = "runout_poly")
+  
+  return(src_cell_poly_group)
+}
