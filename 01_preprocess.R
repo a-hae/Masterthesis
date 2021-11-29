@@ -23,7 +23,7 @@ setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/Stolla")
 
 dtm <- raster("stolla_dtm5m.tif")
 
-dbflows_ply <- readOGR(".","DF_Stolla_all")
+dbflows_ply <- readOGR(".","DF_Stolla_all_for_src")
 
 source("C:/Users/Annette/OneDrive/Master/Masterarbeit/RProjekt/My_Projekt/Masterthesis/preprocess_fun.R")
 
@@ -35,6 +35,7 @@ dbflows_classtree <- classTreeline(dtm, dbflows_ply, treeline = 2100)
 dbflows_tree <- dbflows_classtree[dbflows_classtree@data$below_treeline == "Yes", "below_treeline"]
 
 plot(dbflows_tree)
+
 
 writeOGR(`dbflows_tree`, dsn = "edit_files", "DF_Stolla_all_class_treeline", driver="ESRI Shapefile", overwrite_layer =  TRUE)
 
@@ -72,7 +73,11 @@ library(MazamaSpatialUtils)
 
 dbflows_con <- combineConnPolys(dbflows_tree)
 
+# raster od source cells to polygon and add runout polygon Id, 
+dbflows_con$Id <- 1: length(dbflows_con)
+src_poly <- cellToPly(src_cells, dbflows_con)
 
+writeOGR(`src_poly`, dsn = "edit_files", "src_poly_10per", driver="ESRI Shapefile", overwrite_layer =  TRUE)
 
 ##  check for connection to river-----------------------------------------------
 river <- readOGR(".","Stolla_channel")
