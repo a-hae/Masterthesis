@@ -23,7 +23,7 @@ setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/Stolla")
 
 dtm <- raster("stolla_dtm5m.tif")
 
-dbflows_ply <- readOGR(".","DF_Stolla_all_for_src")
+dbflows_ply <- readOGR(".","DF_Stolla_all")
 
 source("C:/Users/Annette/OneDrive/Master/Masterarbeit/RProjekt/My_Projekt/Masterthesis/preprocess_fun.R")
 
@@ -43,7 +43,7 @@ writeOGR(`dbflows_tree`, dsn = "edit_files", "DF_Stolla_all_class_treeline", dri
 ## create source cells for each runout polygon ---------------------------------
 
 # define proportion of upper cells to select
-upper_prop <- 0.10
+upper_prop <- 0.05
 
 src_cells <- autoSelCells(dem = dtm, runout_ply = dbflows_tree[1,], prop= upper_prop, upper = TRUE)
 src_cells[is.na(src_cells)] <- 0
@@ -65,7 +65,7 @@ src_cells[src_cells == 0] <- NA
 
 plot(src_cells)
 
-#writeRaster(src_cells, filename = "src_cells_10per.tif", format = "GTiff", overwrite = TRUE)
+writeRaster(src_cells, filename = "src_cells_5per.tif", format = "GTiff", overwrite = TRUE)
 
 
 ## merge all features in shapefile which are connected--------------------------
@@ -77,7 +77,7 @@ dbflows_con <- combineConnPolys(dbflows_tree)
 dbflows_con$Id <- 1: length(dbflows_con)
 src_poly <- cellToPly(src_cells, dbflows_con)
 
-writeOGR(`src_poly`, dsn = "edit_files", "src_poly_10per", driver="ESRI Shapefile", overwrite_layer =  TRUE)
+writeOGR(`src_poly`, dsn = "edit_files", "src_poly_5per", driver="ESRI Shapefile", overwrite_layer =  TRUE)
 
 ##  check for connection to river-----------------------------------------------
 river <- readOGR(".","Stolla_channel")
