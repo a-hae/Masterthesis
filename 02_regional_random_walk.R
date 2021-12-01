@@ -72,5 +72,26 @@ rw_opt <- rwGetOpt(rw_gridsearch_multi, measure = median)
 rw_opt
 
 
+## save ------------------------------------------------------------------------
+
+setwd("results")
+
+save(rw_gridsearch_multi, file = "rw_gridsearch_n15_seed10.Rd")
+
+# Get RW optimal parameter set
+rw_opt <- rwGetOpt(rw_gridsearch_multi, measure = median)
+
+save(rw_opt, file = "rw_opt_params_n15_seed10.Rd")
+
+
+## validate paramters using spatial cross validation----------------------------
+
+rw_spcv <- rwSPCV(x = rw_gridsearch_multi, slide_plys = runout_polygons[runout_polygons_sample,],
+                  n_folds = 5, repetitions = 10)
+
+freq_rw <- rwPoolSPCV(rw_spcv, plot_freq = TRUE)
+
+freq_rw
+
 
 
