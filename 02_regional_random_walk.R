@@ -35,3 +35,42 @@ runout_polygons_sample <- sample(src_poly$rnt_ply, 15)
 sample <- runout_polygons[runout_polygons_sample,]
 
 writeOGR(`sample`, dsn = "edit_files", "DF_Stolla_merged_sample", driver="ESRI Shapefile", overwrite_layer =  TRUE)
+
+
+### Random walk ----------------------------------------------------------------
+## grid seach optimization
+steps <- 10
+rwexp_vec <- seq(1.3, 3, len=steps)
+rwper_vec <- seq(1.5, 2, len=steps)
+rwslp_vec <- seq(20, 40, len=steps)
+
+library(foreach)
+
+# Define which runout polygons are used for optimization
+polyid_vec <- 1:length(runout_polygons[runout_polygons_sample,])
+
+# Set up cluster
+cl <- parallel::makeCluster(4)
+doParallel::registerDoParallel(cl)
+
+# Run grid search loop
+rw_gridsearch_multi <-
+  foreach(poly_id=polyid_vec, .packages=c('rgdal','raster', 'rgeos', 'ROCR', 'Rsagacmd', 'sf', 'runoptGPP')) %dopar% {
+    
+    .GlobalEnv$saga <- saga
+    
+    rwGridsearch(dem, slide_plys = runout_polygons[runout_polygons_sample,], slide_src = src_poly,
+                 slide_id = poly_id, slp_v = rwslp_vec, ex_v = rwexp_vec, per_v = rwper_vec,
+                 gpp_iter = 500, buffer_ext = 500, save_res = FALSE,
+                 plot_eval = FALSE, saga_lib = saga)
+    
+  }
+
+parallel::stopCluster(cl)
+
+rw_opt <- rwGetOpt(rw_gridsearch_multi, measure = median)
+rw_opt
+
+
+
+
