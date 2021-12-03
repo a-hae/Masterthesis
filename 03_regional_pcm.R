@@ -20,3 +20,17 @@ setwd("../")
 river <- readOGR(".", "Stolla_channel")
 
 dem <- raster("stolla_fillsinks_dtm5m.tif")
+
+## Get optimal parameter of random walk-----------------------------------------
+
+setwd("results")
+
+(load("rw_gridsearch_n15_seed10.Rd"))
+
+# Get RW optimal parameter set
+rw_opt <- rwGetOpt(rw_gridsearch_multi, measure = median)
+#save(rw_opt, file = "rw_opt_params_n100_all.Rd")
+
+
+
+
