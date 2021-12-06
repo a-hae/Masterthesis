@@ -16,7 +16,6 @@ dem <- raster("stolla_dtm5m.tif")
 
 setwd("edit_files")
 runout_polygons <- readOGR(".", "DF_Stolla_merged_classified")
-runout_polygons$objectid <- 1:length(runout_polygons)
 
 src_poly <- readOGR(".", "src_poly_5per")
 setwd("../")
