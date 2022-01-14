@@ -1,0 +1,172 @@
+library(runoptGPP)
+library(raster)
+library(rgdal)    
+library(Rsagacmd)
+
+saga <- saga_gis(opt_lib = "sim_geomorphology",
+                 temp_path = "C:/SpatialAnalyst_Temp")
+
+#source("C:/Users/Annette/OneDrive/Master/Masterarbeit/RProjekt/func/custom_runoptGPP_fun.R")
+#source("C:/Users/Annette/OneDrive/Master/Masterarbeit/RProjekt/func/pcm_conn_fun.R")
+
+source("C:/Users/Annette/OneDrive/Master/Masterarbeit/RProjekt/My_Projekt/all_skripts/pcm_fun.R")
+
+# load data---------------------------------------------------------------------
+setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/Stolla/edit_files")
+
+
+# runout and source cells polygon ----------------------------------------------
+
+runout_polygons <- readOGR(".", "DF_Stolla_merged_classified")
+
+runout_polygons_conn <- runout_polygons[runout_polygons$connected == "Yes", "connected"]
+
+src_poly <- readOGR(".", "src_poly_5per")
+src_poly@proj4string@projargs <- proj4string(runout_polygons)
+
+setwd("../")
+river <- readOGR(".", "Stolla_channel")
+river@proj4string@projargs <- proj4string(runout_polygons)
+
+dem <- raster("stolla_fillsinks_dtm5m.tif")
+# Test PCM conn
+#for(i in 1:length(runout_polygons)){
+#  pcmConn(dem, slide_plys = runout_polygons, slide_src, slide_id = i, conn_obj = river,
+#          rw_slp = 40, rw_ex = 3, rw_per = 1.6,
+#          pcm_mu = 0.1, pcm_md = 40,
+#          buffer_ext = 500, buffer_source = NULL, gpp_iter = 1000,
+#          predict_threshold = 0.5, plot_eval = TRUE,
+#          return_features = FALSE, saga_lib)
+
+#}
+
+## Get optimal parameter of random walk-----------------------------------------
+
+setwd("opt_rw")
+
+(load("rw_gridsearch_n15_seed10.Rd"))
+
+# Get RW optimal parameter set
+rw_opt <- rwGetOpt(rw_gridsearch_multi, measure = median)
+
+#save(rw_opt, file = "rw_opt_params_n100_all.Rd")
+
+## PCM optimization ------------------------------------------------------------
+pcmmd_vec <- seq(20, 150, by=5) #mass-to-drag ratio
+pcmmu_vec <- seq(0.04, 0.6, by=0.01) #sliding friction coefficient
+
+library(foreach)
+
+# Define which runout polygons are used for optimization
+#polyid_vec <- 6:6 #c(,35,51,56,92)
+polyid_vec <- 1:length(runout_polygons_conn)
+
+
+#polyid_vec <- c(12, 24)
+# Location to save temp files
+setwd("../opt_pcm/conn")
+
+
+# Run using parallelization
+cl <- parallel::makeCluster(4)
+doParallel::registerDoParallel(cl)
+
+pcm_gridsearch_multi <-
+  foreach(poly_id=polyid_vec, .packages=c('rgdal','raster', 'rgeos', 'ROCR', 'Rsagacmd', 'sf', 'runoptGPP')) %dopar% {
+    
+    .GlobalEnv$saga <- saga
+    
+    pcmConnGridsearch(dem, conn_obj = river,
+                      slide_plys = runout_polygons_conn, slide_src = src_poly, slide_id = poly_id,
+                      rw_slp = rw_opt$rw_slp_opt, rw_ex = rw_opt$rw_exp_opt, rw_per = rw_opt$rw_per_opt,
+                      pcm_mu_v = pcmmu_vec, pcm_md_v = pcmmd_vec,
+                      gpp_iter = 1000,                              # soll 1000
+                      buffer_ext = 500,
+                      predict_threshold = 0.5, save_res = TRUE,
+                      plot_eval = FALSE, saga_lib = saga)
+    
+  }
+
+
+
+parallel::stopCluster(cl)
+
+#-------------------------------------------------------------------------------
+## get oprimal paramter from files----------------------------------------------7
+
+setwd("C:/Users/Annette/OneDrive/Master/Masterarbeit/Data/Stolla/opt_pcm/conn")
+
+x <- list()
+
+
+files <- list.files(pattern = "result_pcmconn_gridsearch_")
+
+
+for(i in 1:length(files)){
+  res_nm <- paste("result_pcmconn_gridsearch_", i, ".Rd", sep="")
+  res_obj_nm <- load(res_nm)
+  result_pcm <- get(res_obj_nm)
+  x[[i]] <- result_pcm
+}
+
+#x <- x[!sapply(x,is.null)]
+
+pcm_gridsearch_multi <- x
+
+# Get RMSE 
+pcm_opt <- pcmGetOpt(pcm_gridsearch_multi, performance = "relerr", measure = "median", plot_opt = TRUE)
+pcm_opt
+
+# error for optimal paramters (for individual slides)
+errorIndvConn(pcm_gridsearch_multi, pcm_opt = pcm_opt)
+
+
+pcm_connopt <- pcmGetConnOpt(pcm_gridsearch_multi, performance = "relerr", measure = "median", plot_opt = TRUE, from_save = FALSE)
+pcm_connopt
+errorIndvConn(pcm_gridsearch_multi, pcm_opt = pcm_connopt)
+
+
+## save ------------------------------------------------------------------------
+
+setwd("results")
+
+save(pcm_gridsearch_multi, file = "pcm_gridsearch_all.Rd")
+
+
+save(pcm_opt, file = "pcm_opt_params_all.Rd")
+
+save(pcm_connopt, file = "pcm_conn_opt_params_all.Rd")
+
+#-------------------------------------------------------------------------------
+#visualize
+
+#runout_polygons_conn <- runout_polygons[runout_polygons$connected == "Yes", ]
+runout_polygons_conn <- runout_polygons@data[runout_polygons$connected == "Yes", ]
+
+runout <- cbind(runout_polygons_conn, errorIndvConn(x, pcm_opt = pcm_connopt))
+plot(runout, "connected")
+hist(runout$error)
+
+median(runout$relerr)
+
+err_conn <- errorIndvConn(x[[1:21]], pcm_opt = pcm_connopt)
+
+hist(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+
+hist(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+median(runout$auroc)
+IQR(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+err_df <- rbind(data.frame(error = errorIndvConn(x, pcm_opt = pcm_connopt)$error,
+                           opt = "connect"),
+                data.frame(error = errorIndvConn(x, pcm_opt = pcm_opt)$error,
+                           opt = "default"))
+
+boxplot(error ~ opt, data = err_df)
+
+IQR(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+# Plot Individual Simulations w Opt results ###################################
+# visualize  what was going on, help with diskussion
