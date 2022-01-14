@@ -1,15 +1,17 @@
-# function for pcm 
+# function for pcm :
+#-------------------------------------------------------------------------------
 #- allTrue
 #- errorIndvConn
 #- errMinBboxLength
 #- mse
 #- rmse
-#- runoutGeom
+#- nintyTrue
+#- nintyFiveTrue
 #- pcmConn
 #- pcmConnGridsearch
 #- pcmGetConnOpt
 #- pcmSpConn
-
+#- runoutGeom
 # ------------------------------------------------------------------------------
 allTrue <- function(x){ all(x == TRUE)}
 
@@ -70,74 +72,24 @@ rmse <- function(error){
   sqrt(mean(error^2))
 }
 
-
-runoutGeom <- function(runout_plys, elev, ID = NULL) {
-  #Create a dataframe to store the ID, length, width and (landslide) area
-  if(is.null(ID)){
-    bbDf <- data.frame(fid = 0:(length(runout_plys)-1), id = 1:length(runout_plys),
-                       width = NA, length = NA, area = NA, surfacearea = NA,
-                       maxelev = NA, minelev = NA, reachangle = NA)
-  } else {
-    bbDf <- data.frame(fid = 0:(length(runout_plys)-1), id = NA,
-                       width = NA, length = NA, area = NA, surfacearea = NA,
-                       maxelev = NA, minelev = NA, reachangle = NA)
+nintyTrue <- function(x) {
+  if ((sum(x==TRUE)/length(x)) >= 0.9){
+    return (TRUE)
+  } else{ 
+    return (FALSE)
   }
   
-  
-  n_features <- length(runout_plys@polygons)
-  
-  for (i in 1:n_features){
-    runout_ply <- runout_plys[i,]
-    
-    if(!is.null(ID)){bbDf[i,]$id <- runout_ply@data[,ID]}
-    #Get the vertices coordinates of from SpatialPolygons
-    #pnts <- runout_ply@polygons[[1]]@Polygons[[1]]@coords
-    pnts <- getVertices(runout_ply)
-    #Calculate minimum area rectangle
-    bb <- minbb(pnts)
-    
-    #Calcluate the difference in elevation between points
-    elevExt <- raster::extract(elev, bb$box[1:4,])
-    dElev12 <- sqrt( (elevExt[1] - elevExt[2])^2)
-    dElev14 <- sqrt( (elevExt[1] - elevExt[4])^2)
-    
-    if(is.na(dElev14)){
-      #If bounding box node extends beyond dem (e.g. in NA area)
-      dElev14 <- sqrt( (elevExt[2] - elevExt[3])^2)
-    }
-    #Determine (and calculate) the length and width based on delta elevation
-    
-    if(is.na(dElev12)){
-      #If bounding box node extends beyond dem (e.g. in NA area)
-      dElev12 <- sqrt( (elevExt[4] - elevExt[3])^2)
-    }
-    
-    if(dElev12 > dElev14) {
-      length <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[2,1], bb$box[2,2])
-      width <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[4,1], bb$box[4,2])
-    } else {
-      length <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[4,1], bb$box[4,2])
-      width <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[2,1], bb$box[2,2])
-    }
-    
-    bbDf[i,]$length <- length #planar
-    bbDf[i,]$width <- width #planar
-    bbDf[i,]$area <- rgeos::gArea(runout_ply) #area of landslide (*not area of bbox) {Rgeos}
-    
-    #Calculate the 'true' surface area
-    elevCrop <- raster::crop(elev, runout_ply) #crop and mask used to speed up calculation
-    elevMask <- raster::mask(elevCrop, runout_ply)
-    elevMaskSGDF <- as(elevMask , "SpatialGridDataFrame")
-    bbDf[i,]$surfacearea <- sp::surfaceArea(elevMaskSGDF) #surfacearea of landslide {sp}
-    #Calculate the max. and min. elevation
-    elevPnts <- raster::extract(elev, pnts)
-    bbDf[i,]$maxelev <- max(elevPnts)
-    bbDf[i,]$minelev <- min(elevPnts)
-    bbDf[i,]$reachangle <- 90 - (atan( bbDf[i,]$length / ( bbDf[i,]$maxelev- bbDf[i,]$minelev))*180/pi)
-    
-  }
-  return(bbDf)
 }
+
+nintyFiveTrue <- function(x) {
+  if ((sum(x==TRUE)/length(x)) >= 0.95){
+    return (TRUE)
+  } else{ 
+    return (FALSE)
+  }
+  
+}
+
 
 pcmConn <- function(dem, slide_plys, slide_src, slide_id = 1, conn_obj,
                     rw_slp = 33, rw_ex = 3, rw_per = 2,
@@ -367,7 +319,103 @@ pcmConnGridsearch <- function(dem, conn_obj,
   
 }
 
-pcmGetConnOpt <- function(x, performance = "relerr", measure = "median",
+
+pcmGetConnOpt <- function(x, performance = "relerr", measure = "median", conn_proportion = "allTrue",
+                          from_save = FALSE, plot_opt = FALSE){
+  
+  # conn_proportion: allTrue, nintyTrue, nintyFiveTrue
+  
+  if(from_save){
+    x <- list()
+    
+    files <- list.files(pattern = "result_pcm_gridsearch_")
+    
+    for(i in 1:length(files)){
+      res_nm <- paste("result_pcmconn_gridsearch_", i, ".Rd", sep="")
+      res_obj_nm <- load(res_nm)
+      result_pcm <- get(res_obj_nm)
+      x[[i]] <- result_pcm
+    }
+    
+  }
+  
+  pcm_md_vec <- as.numeric(colnames(x[[1]][[1]]))
+  pcm_mu_vec <- as.numeric(rownames(x[[1]][[1]]))
+  
+  n_train <- length(x)
+  
+  err_list <- list()
+  roc_list <- list()
+  conn_list <- list()
+  
+  for(i in 1:n_train){
+    
+    err_list[[i]] <- x[[i]][[performance]]
+    roc_list[[i]] <- x[[i]][['auroc']]
+    conn_list[[i]] <- x[[i]][['connect']]
+    
+  }
+  
+  err <- apply(simplify2array(err_list), 1:2, get(measure))
+  roc <- apply(simplify2array(roc_list), 1:2, get(measure))
+  conn <- apply(simplify2array(conn_list), 1:2, conn_proportion)
+  
+  # Filter results for only runout paths that connect to object (e.g. river)
+  min_conn_err <- min(err[conn])
+  
+  min_conn_err <- err[conn][3]
+  
+  err_wh <- which(err==min_conn_err, arr.ind=TRUE)
+  err[err_wh]
+  
+  # Use AUROC for tie breaking
+  if(length(err_wh) > 2){
+    err_wh <- err_wh[which(roc[err_wh]==max(roc[err_wh]), arr.ind=TRUE),]
+  }
+  
+  # If still no tie break, take first one...
+  if(length(err_wh) > 2){
+    err_wh <- err_wh[1,]
+  }
+  
+  opt_md <- pcm_md_vec[err_wh[2]] #col
+  opt_mu <- pcm_mu_vec[err_wh[1]] #row
+  
+  opt_gpp_par <- data.frame(
+    pcm_mu = opt_mu,
+    pcm_md = opt_md
+  )
+  
+  opt_gpp_par[paste0(measure, "_", performance)] <- err[err_wh[1], err_wh[2]]
+  opt_gpp_par[paste0(measure, "_", "auroc")] <- roc[err_wh[1], err_wh[2]]
+  
+  if(plot_opt){
+    
+    err_df <- reshape2::melt(err)
+    
+    gg <- ggplot2::ggplot(data = err_df, ggplot2::aes(x=err_df$Var2, y=err_df$Var1, z=err_df$value)) +
+      ggplot2::geom_tile(ggplot2::aes(fill = err_df$value)) +
+      
+      ggplot2::ylab(expression(paste("Sliding friction coefficient"))) +
+      ggplot2::xlab("Mass-to-drag ratio (m)") +
+      
+      ggplot2::labs(fill="Median relative\nrunout distance\nerror") +
+      
+      ggplot2::scale_fill_viridis_c(direction = 1) +
+      ggplot2::theme_light() +
+      ggplot2::theme(text = ggplot2::element_text(family = "Arial", size = 8),
+                     axis.title = ggplot2::element_text(size = 9),
+                     axis.text = ggplot2::element_text(size = 8))
+    
+    print(gg)
+  }
+  
+  return(opt_gpp_par)
+  
+}
+
+
+pcmGetConnOpt_old <- function(x, performance = "relerr", measure = "median",
                           from_save = FALSE, plot_opt = FALSE){
   
   if(from_save){
@@ -628,4 +676,72 @@ pcmSpConn <- function(dem, slide_plys, slide_src, slide_id = 1, conn_obj,
            length.error = length_error))
   }
   
+}
+
+runoutGeom <- function(runout_plys, elev, ID = NULL) {
+  #Create a dataframe to store the ID, length, width and (landslide) area
+  if(is.null(ID)){
+    bbDf <- data.frame(fid = 0:(length(runout_plys)-1), id = 1:length(runout_plys),
+                       width = NA, length = NA, area = NA, surfacearea = NA,
+                       maxelev = NA, minelev = NA, reachangle = NA)
+  } else {
+    bbDf <- data.frame(fid = 0:(length(runout_plys)-1), id = NA,
+                       width = NA, length = NA, area = NA, surfacearea = NA,
+                       maxelev = NA, minelev = NA, reachangle = NA)
+  }
+  
+  
+  n_features <- length(runout_plys@polygons)
+  
+  for (i in 1:n_features){
+    runout_ply <- runout_plys[i,]
+    
+    if(!is.null(ID)){bbDf[i,]$id <- runout_ply@data[,ID]}
+    #Get the vertices coordinates of from SpatialPolygons
+    #pnts <- runout_ply@polygons[[1]]@Polygons[[1]]@coords
+    pnts <- getVertices(runout_ply)
+    #Calculate minimum area rectangle
+    bb <- minbb(pnts)
+    
+    #Calcluate the difference in elevation between points
+    elevExt <- raster::extract(elev, bb$box[1:4,])
+    dElev12 <- sqrt( (elevExt[1] - elevExt[2])^2)
+    dElev14 <- sqrt( (elevExt[1] - elevExt[4])^2)
+    
+    if(is.na(dElev14)){
+      #If bounding box node extends beyond dem (e.g. in NA area)
+      dElev14 <- sqrt( (elevExt[2] - elevExt[3])^2)
+    }
+    #Determine (and calculate) the length and width based on delta elevation
+    
+    if(is.na(dElev12)){
+      #If bounding box node extends beyond dem (e.g. in NA area)
+      dElev12 <- sqrt( (elevExt[4] - elevExt[3])^2)
+    }
+    
+    if(dElev12 > dElev14) {
+      length <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[2,1], bb$box[2,2])
+      width <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[4,1], bb$box[4,2])
+    } else {
+      length <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[4,1], bb$box[4,2])
+      width <- EuclDist(bb$box[1,1], bb$box[1,2], bb$box[2,1], bb$box[2,2])
+    }
+    
+    bbDf[i,]$length <- length #planar
+    bbDf[i,]$width <- width #planar
+    bbDf[i,]$area <- rgeos::gArea(runout_ply) #area of landslide (*not area of bbox) {Rgeos}
+    
+    #Calculate the 'true' surface area
+    elevCrop <- raster::crop(elev, runout_ply) #crop and mask used to speed up calculation
+    elevMask <- raster::mask(elevCrop, runout_ply)
+    elevMaskSGDF <- as(elevMask , "SpatialGridDataFrame")
+    bbDf[i,]$surfacearea <- sp::surfaceArea(elevMaskSGDF) #surfacearea of landslide {sp}
+    #Calculate the max. and min. elevation
+    elevPnts <- raster::extract(elev, pnts)
+    bbDf[i,]$maxelev <- max(elevPnts)
+    bbDf[i,]$minelev <- min(elevPnts)
+    bbDf[i,]$reachangle <- 90 - (atan( bbDf[i,]$length / ( bbDf[i,]$maxelev- bbDf[i,]$minelev))*180/pi)
+    
+  }
+  return(bbDf)
 }
