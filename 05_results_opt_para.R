@@ -1,4 +1,4 @@
-
+library(runoptGPP)
 
 
 source("C:/Users/Annette/OneDrive/Master/Masterarbeit/RProjekt/My_Projekt/Masterthesis/pcm_fun.R")
@@ -23,3 +23,16 @@ for(i in 1:length(files)){
 }
 
 pcm_gridsearch_multi <- x
+
+# Optimale parameter
+pcm_opt <- pcmGetOpt(pcm_gridsearch_multi, performance = "relerr", measure = "median", plot_opt = TRUE)
+pcm_opt
+
+# error for optimal paramters (for individual slides)
+errorIndvConn(pcm_gridsearch_multi, pcm_opt = pcm_opt)
+
+# Optimale parameter for all polygons are connected
+pcm_connopt <- pcmGetConnOpt(pcm_gridsearch_multi, performance = "relerr", measure = "median", plot_opt = TRUE, from_save = FALSE)
+pcm_connopt
+
+errorIndvConn(pcm_gridsearch_multi, pcm_opt = pcm_connopt)
