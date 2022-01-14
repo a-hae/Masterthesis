@@ -41,7 +41,6 @@ plot(runout_polygons, add = TRUE)
 
 # create crown height ----------------------------------------------------------
 
-
 crown_hgt <- dsm - dtm
 
 plot(hs, col=grey(0:100/100), legend = FALSE, main = "Stolla Basin")
@@ -53,3 +52,30 @@ writeRaster(crown_hgt, filename = "stolla_crown_hgt_2010.tif", format = "GTiff")
 
 writeRaster(dsm, filename = "stolla_dsm_2010_5m.tif", format = "GTiff", overwrite = TRUE)
 
+# Clean with land use map-------------------------------------------------------
+
+# Load land use data
+landuse_polygons <- readOGR(".", "landuse_Stolla")
+
+# Create a grid for land_use
+landuse <- terra::rasterize(landuse_polygons, dsm, field = "CODE_1")
+
+# Create a forest grid
+mask <- landuse
+mask[mask == 1] <- 0
+mask[mask == 2] <- 1
+mask[mask == 3] <- 1
+mask[mask == 4] <- 1
+mask[mask == 5] <- 0
+mask[mask == 0] <- NA
+
+plot(mask)
+
+mask_crown_hgt <- mask(crown_hgt, mask)
+writeRaster(mask_crown_hgt, filename = "mask_crown_height.tif", format = "GTiff")
+mask_crown_hgt[is.na(mask_crown_hgt)] = 0
+mask_crown_hgt <- mask(mask_crown_hgt, dsm)
+writeRaster(mask_crown_hgt, filename = "mask_crown_height_dsm.tif", format = "GTiff")
+plot(mask_crown_hgt)
+
+mask_crown_hgt
