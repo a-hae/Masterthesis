@@ -36,3 +36,16 @@ pcm_connopt <- pcmGetConnOpt(pcm_gridsearch_multi, performance = "relerr", measu
 pcm_connopt
 
 errorIndvConn(pcm_gridsearch_multi, pcm_opt = pcm_connopt)
+
+
+## save ------------------------------------------------------------------------
+
+setwd("results")
+
+save(pcm_gridsearch_multi, file = "pcm_gridsearch_all.Rd")
+
+
+save(pcm_opt, file = "pcm_opt_params_all.Rd")
+
+save(pcm_connopt, file = "pcm_conn_opt_params_all.Rd")
+
