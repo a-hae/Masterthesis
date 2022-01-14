@@ -32,8 +32,9 @@ pcm_opt
 errorIndvConn(pcm_gridsearch_multi, pcm_opt = pcm_opt)
 
 # Optimale parameter for all polygons are connected
-pcm_connopt <- pcmGetConnOpt(pcm_gridsearch_multi, performance = "relerr", measure = "median", plot_opt = TRUE, from_save = FALSE)
+pcm_connopt <- pcmGetConnOpt(pcm_gridsearch_multi, performance = "relerr", measure = "median",  conn_proportion = "nintyFiveTrue", plot_opt = TRUE, from_save = FALSE)
 pcm_connopt
+
 
 errorIndvConn(pcm_gridsearch_multi, pcm_opt = pcm_connopt)
 
@@ -49,3 +50,37 @@ save(pcm_opt, file = "pcm_opt_params_all.Rd")
 
 save(pcm_connopt, file = "pcm_conn_opt_params_all.Rd")
 
+
+#-------------------------------------------------------------------------------
+#visualize
+
+#runout_polygons_conn <- runout_polygons[runout_polygons$connected == "Yes", ]
+runout_polygons_conn <- runout_polygons@data[runout_polygons$connected == "Yes", ]
+
+runout <- cbind(runout_polygons_conn, errorIndvConn(x, pcm_opt = pcm_connopt))
+plot(runout, "connected")
+hist(runout$error)
+
+median(runout$relerr)
+
+err_conn <- errorIndvConn(x[[1:21]], pcm_opt = pcm_connopt)
+
+hist(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+
+hist(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+median(runout$auroc)
+IQR(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+err_df <- rbind(data.frame(error = errorIndvConn(x, pcm_opt = pcm_connopt)$error,
+                           opt = "connect"),
+                data.frame(error = errorIndvConn(x, pcm_opt = pcm_opt)$error,
+                           opt = "default"))
+
+boxplot(error ~ opt, data = err_df)
+
+IQR(errorIndvConn(x, pcm_opt = pcm_opt)$error)
+
+# Plot Individual Simulations w Opt results ###################################
+# visualize  what was going on, help with diskussion
