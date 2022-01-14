@@ -27,6 +27,7 @@ src_poly <- spTransform(src_poly, runout_polygons@proj4string)
 saga <- saga_gis(opt_lib = "sim_geomorphology")
 
 ### create sample data ---------------------------------------------------------
+setwd("opt_rw")
 
 set.seed(10)
 runout_polygons_sample <- sample(src_poly$rnt_ply, 15)
@@ -73,7 +74,6 @@ rw_opt
 
 ## save ------------------------------------------------------------------------
 
-setwd("results")
 
 save(rw_gridsearch_multi, file = "rw_gridsearch_n15_seed10.Rd")
 
@@ -85,7 +85,6 @@ save(rw_opt, file = "rw_opt_params_n15_seed10.Rd")
 
 ## validate paramters using spatial cross validation----------------------------
 
-setwd("opt_rw")
 
 (load("rw_gridsearch_n15_seed10.Rd"))
 
