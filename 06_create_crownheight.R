@@ -38,3 +38,18 @@ plot(hs, col=grey(0:100/100), legend = FALSE, main = "Stolla Basin")
 plot(dsm, add = TRUE, alpha = 0.4)
 plot(runout_polygons, add = TRUE)
 
+
+# create crown height ----------------------------------------------------------
+
+
+crown_hgt <- dsm - dtm
+
+plot(hs, col=grey(0:100/100), legend = FALSE, main = "Stolla Basin")
+plot(crown_hgt, add = TRUE, alpha = 0.3)
+plot(runout_polygons, add = TRUE)
+
+setwd("../")
+writeRaster(crown_hgt, filename = "stolla_crown_hgt_2010.tif", format = "GTiff")
+
+writeRaster(dsm, filename = "stolla_dsm_2010_5m.tif", format = "GTiff", overwrite = TRUE)
+
