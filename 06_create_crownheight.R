@@ -79,3 +79,40 @@ writeRaster(mask_crown_hgt, filename = "mask_crown_height_dsm.tif", format = "GT
 plot(mask_crown_hgt)
 
 mask_crown_hgt
+
+
+## classsify crown heigth ------------------------------------------------------
+
+
+class.m <- c(-Inf,0,0,
+             0, 1, 1,
+             1, 2.5, 2.5,
+             2.5, 5, 5,  
+             5 , 10, 10,
+             10, 30, 30,
+             30, Inf, NaN)
+
+# reshape the object into a matrix with columns and rows
+rcl.m <- matrix(class.m, 
+                ncol=3, 
+                byrow=TRUE)
+
+# reclassify the raster using the reclass object - rcl.m
+asp.ns <- reclassify(mask_crown_hgt, 
+                     rcl.m)
+
+
+# plot
+plot(asp.ns)
+title("Crown height [m]")
+# allow legend to plot outside of bounds
+par(xpd=TRUE)
+
+
+# export geotiff
+writeRaster(asp.ns,
+            filename="stolla_crown_hgt_reclass.tif",
+            format="GTiff",
+            options="COMPRESS=LZW",
+            overwrite = TRUE,
+            NAflag = -9999)
