@@ -84,7 +84,7 @@ mask_crown_hgt
 ## classsify crown heigth ------------------------------------------------------
 
 
-class.m <- c(-Inf,0,0,
+class.m <- c(-Inf,0,NaN,
              0, 1, 1,
              1, 2.5, 2.5,
              2.5, 5, 5,  
@@ -116,3 +116,4 @@ writeRaster(asp.ns,
             options="COMPRESS=LZW",
             overwrite = TRUE,
             NAflag = -9999)
+
