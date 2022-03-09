@@ -100,5 +100,32 @@ runout_polygons_sample <- runout_polygons[runout_polygons$sample == "Yes", ]
 sample_ids <- runout_polygons_sample$Id
 
 
+# set path for results
+setwd("../opt_chm/thresholds/ply_filtering/Run_Nr2")
 
 
+## PCM -------------------------------------------------------------------------
+# parallize psmSpconn
+
+library(foreach)
+# Run using parallelization
+c2 <- parallel::makeCluster(1)
+doParallel::registerDoParallel(c2)
+
+
+  foreach(poly_id= sample_ids, .packages=c('rgdal','raster', 'rgeos', 'ROCR', 'Rsagacmd', 'sf', 'runoptGPP')) %dopar% {
+    
+    .GlobalEnv$saga <- saga
+    
+    pcmSpConn_thres(chm, thres_grid, pcmmu_vec, dem, slide_plys = runout_polygons, slide_src = src_poly, slide_id = poly_id, conn_obj = river,
+                    rw_slp = rw_opt$rw_slp_opt, rw_ex = rw_opt$rw_exp_opt, rw_per = rw_opt$rw_per_opt,
+                    mu_grid = chm$mu, md_grid = chm$md,
+                    buffer_ext = 500, buffer_source = NULL, gpp_iter = 500,
+                    predict_threshold = 0.5, plot_eval = FALSE,
+                     saga_lib = saga)
+    
+  }
+
+
+
+parallel::stopCluster(c2)
