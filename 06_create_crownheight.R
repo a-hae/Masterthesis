@@ -84,13 +84,17 @@ mask_crown_hgt
 ## classsify crown heigth ------------------------------------------------------
 
 
+# class.m <- c(-Inf,0,NaN,
+#              0, 1, 1,
+#              1, 2.5, 2.5,
+#              2.5, 5, 5,  
+#              5 , 10, 10,
+#              10, 30, 30,
+#              30, Inf, NaN)
+
 class.m <- c(-Inf,0,NaN,
-             0, 1, 1,
-             1, 2.5, 2.5,
-             2.5, 5, 5,  
-             5 , 10, 10,
-             10, 30, 30,
-             30, Inf, NaN)
+             50, Inf, NaN)
+
 
 # reshape the object into a matrix with columns and rows
 rcl.m <- matrix(class.m, 
