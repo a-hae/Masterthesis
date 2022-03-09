@@ -115,7 +115,7 @@ par(xpd=TRUE)
 
 # export geotiff
 writeRaster(asp.ns,
-            filename="stolla_crown_hgt_reclass.tif",
+            filename="stolla_crown_hgt_reclass_v9.tif",
             format="GTiff",
             options="COMPRESS=LZW",
             overwrite = TRUE,
