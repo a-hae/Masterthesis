@@ -46,6 +46,25 @@ chm <- raster("stolla_crown_hgt_reclass_v9.tif")
 chm@crs@projargs <- proj4string(dem)
 
 
+##PCM parameter-----------------------------------------------------------------
+## Get optimal parameter of random walk-----------------------------------------
+
+setwd("opt_rw")
+
+(load("rw_gridsearch_n15_seed10.Rd"))
+
+# Get RW optimal parameter set
+rw_opt <- rwGetOpt(rw_gridsearch_multi, measure = median)
+
+## define Threshold and friction grid-------------------------------------------
+thres_grid <- seq(1,16, by = 1)
+pcmmu_vec <- seq(0.05, 0.75, by=0.1)
+
+#  basic mu and md values
+chm$md <- 30
+chm$mu <- 0.05
+
+
 ## Filtering -------------------------------------------------------------------
 ##------------------------------------------------------------------------------
 # use only slides for all threshold: have crwon heigth values 
@@ -79,3 +98,7 @@ for (i in 1:length(runout_polygons)) {
 
 runout_polygons_sample <- runout_polygons[runout_polygons$sample == "Yes", ]
 sample_ids <- runout_polygons_sample$Id
+
+
+
+
