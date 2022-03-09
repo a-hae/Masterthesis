@@ -41,6 +41,41 @@ dem <- raster("stolla_fillsinks_dtm5m.tif")
 
 river@proj4string@projargs <- proj4string(dem)
 runout_polygons@proj4string@projargs <- proj4string(dem)
-# crown heigth raster
+# crown heigth raster (classified with classify.R ]0,50[)
 chm <- raster("stolla_crown_hgt_reclass_v9.tif")
 chm@crs@projargs <- proj4string(dem)
+
+
+## Filtering -------------------------------------------------------------------
+##------------------------------------------------------------------------------
+# use only slides for all threshold: have crwon heigth values 
+
+# get crown heigtht for each slide (based on observed polygon)
+# RUN IT ONLY ONCE! (need long)
+runout_polygons_chm <- ch_per_slide(runout_polygons, chm)
+#empty column for the threshold with existing class sides
+runout_polygons_chm$filter <- NA
+
+for (i in 1:length(runout_polygons)) {
+  class_sgl <- runout_polygons_chm$chm[[i]]
+  ls_thres <- NULL
+  for (t in 1: length(thres_grid)) {
+    if (any(class_sgl < thres_grid[t],  na.rm = TRUE) && any(class_sgl >= thres_grid[t], na.rm = TRUE)) {
+      ls_thres <- append(ls_thres, thres_grid[t])
+    }
+  }
+  runout_polygons_chm$filter[i] <- list(ls_thres) 
+  
+}
+
+# choose only slide which have all thresolds frrom grid
+runout_polygons$sample <- "No"
+for (i in 1:length(runout_polygons)) {
+  if (isTRUE(all.equal(thres_grid, runout_polygons_chm$filter[[i]]))) {
+    runout_polygons$sample[i] <- "Yes"
+  }
+  
+}
+
+runout_polygons_sample <- runout_polygons[runout_polygons$sample == "Yes", ]
+sample_ids <- runout_polygons_sample$Id
