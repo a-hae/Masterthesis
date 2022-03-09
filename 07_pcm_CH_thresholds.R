@@ -41,7 +41,7 @@ dem <- raster("stolla_fillsinks_dtm5m.tif")
 
 river@proj4string@projargs <- proj4string(dem)
 runout_polygons@proj4string@projargs <- proj4string(dem)
-# crown heigth raster (classified with classify.R ]0,50[)
+# crown heigth raster (classified with create_crownheight.R ]0,50[)
 chm <- raster("stolla_crown_hgt_reclass_v9.tif")
 chm@crs@projargs <- proj4string(dem)
 
